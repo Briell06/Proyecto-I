@@ -86,9 +86,7 @@ urlpatterns = [
     path("disponibilidad/", views.check_availability, name="check_availability"),
     path("buscar-horario/", views.find_slot, name="find_slot"),
     # URLs para restricciones de recursos
-    path(
-        "restricciones/", views.ConstraintListView.as_view(), name="constraint_list"
-    ),
+    path("restricciones/", views.ConstraintListView.as_view(), name="constraint_list"),
     path(
         "restricciones/crear/",
         views.ConstraintCreateView.as_view(),

@@ -602,4 +602,3 @@ def find_slot(request):
         form = FindSlotForm()
 
     return render(request, "airline_app/find_slot.html", {"form": form})
-

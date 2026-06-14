@@ -1,3 +1,5 @@
+# IMPORTANTE: Si quiere ver el proyecto sin tener que instalar dependencias y con datos de prueba para que no tenga que insertarlos manualmente, puede visitar la página online accediendo a [https://briell.pythonanywhere.com/](https://briell.pythonanywhere.com/), allí puede también editar, leer crear y borrar eventos y recursos para probar el sistema
+
 # Sistema de Gestión de Aeropuerto
 
 Sistema Django para la coordinación de operaciones de vuelo, asignación de recursos y programación de personal.
@@ -17,27 +19,23 @@ aeroportuarias.
 
 ## Tecnologías
 
-- Django 5.2.7
-- Python 3.8+
-- MySQL
+- Django 5.2.7: Esta fue la decisión mas importante, ya que me permitió desarrollar el proyecto de manera rápida y eficiente, gracias a su potente ORM, sistema de plantillas y facilidad para gestionar relaciones entre modelos. La escogí por su robustez, comunidad activa (StackOverflow) y mi experiencia previa con el framework, lo que me permitió enfocarme más en la lógica de negocio y menos en la configuración y detalles técnicos.
+- Tailwindcss: Esta es la librería de CSS que utilicé para el diseño de la interfaz, me gusta mucho porque es muy fácil de usar y ya tengo mucha experiencia debido a proyectos de react y Angular en los que he utilizado tailwind y me permitió crear una interfaz moderna y responsive sin tener que escribir mucho código CSS puro, sino que con solo agregar clases sencillas a los elementos html ya tenía lo que necesitaba, no pude instalarlo como dependencia ya que era un poco tedioso de hacer en django, ya que no tiene soporte oficial, sino que la comunidad ha creado sus propios paquetes para hacerlo, por lo que simplemente lo añadí como CDN al home.html que es el documento html raíz del proyecto.
+- Python 3.8+: Simplemente es el lenguaje obligatorio y principal del proyecto
+- MySQL (producción): Como hice el despliegue en PythonAnywhere, tuve que usar MySQL ya que es la base de datos que ofrecen en su plan gratuito, aunque el proyecto está diseñado para ser compatible con cualquier base de datos soportada por Django, incluyendo PostgreSQL y SQLite, MongoDB, MariaDB etc.
+- SQLlite (desarrollo): Ligera y rápida para desarrollo local, no requiere configuración adicional, ideal para pruebas y desarrollo rápido.
 
-## Instalación
+## Instalación Automática
 
-### 0. Configuración inicial
+1. Ejecutar el archivo main.py
 
-(si desea correr el proyecto de esta forma "forma local" debería configurar el archivo settings.py y cambiar la variable
-DEBUG a True)
-
-```python
-# old
-DEBUG = False
-
-# new
-DEBUG = True
+```bash
+python main.py
 ```
 
-si no es asi puede visitar la pagina online accediendo
-a [https://briell.pythonanywhere.com/](https://briell.pythonanywhere.com/)
+2. Una vez termine de instalar las dependencias y configurar la base de datos, acceder a [http://localhost:8000/](http://localhost:8000/)
+
+## Instalación Manual
 
 ### 1. Clonar repositorio
 
@@ -264,21 +262,6 @@ Las aeronaves requieren 24 horas entre vuelos para mantenimiento obligatorio.
 - Experiencia del personal: 0-50 años
 - Duración máxima de vuelo: 20 horas
 
-## Estructura del proyecto
-
-```text
-proyecto v2/
-├── airline_app/      # Aplicación principal
-│   ├── models.py     # Modelos de datos
-│   ├── views.py      # Lógica de vistas
-│   ├── forms.py      # Formularios
-│   ├── urls.py       # Rutas
-│   └── templates/    # Plantillas HTML
-├── config/           # Configuración Django
-├── manage.py         # Script de gestión
-└── requirements.txt  # Dependencias
-```
-
 ## Modelos principales
 
 - **Runway**: Pistas de aterrizaje/despegue
@@ -299,7 +282,6 @@ proyecto v2/
 - `/restricciones/` - Gestión de restricciones de recursos
 - `/buscar-horario/` - Búsqueda inteligente de horarios
 - `/disponibilidad/` - Consulta de disponibilidad
-- `/admin/` - Interfaz de administración
 
 ## Configuración
 
@@ -309,9 +291,12 @@ Archivo principal: `config/settings.py`
 - `LANGUAGE_CODE = "es-mx"` - Localización en español
 - `TIME_ZONE = "America/Havana"` - Zona horaria
 
-## Licencia
+## Aprendizaje
 
-Proyecto desarrollado para la Universidad de la Habana en la carrera de Ciencias de la Computación.
+```text
+Lo que más aprendí al diseñar un sistema complejo con múltiples modelos relacionados, fue a aplicar principios de diseño de software y buenas prácticas de desarrollo. También mejoré mis habilidades en Django, ya que tenía experiencia previa con este framework y se me hizo bastante óptimo y familiar para desarrollar este proyecto, especialmente en la gestión de relaciones entre modelos (Lo que más me costó xdd) y el potencial que tienen las funciones para crear porciones de código reutilizables que te evitan repetición de código y bugs innecesarios, también lo útil que es el bloque try except a la hora te interceptar errores que pueden tumbar un programa y en lugar de eso gestionarlos y minimizarlos.
+```
+
+Proyecto desarrollado para la Universidad de la Habana en la carrera de Ciencias de la Computación, primer semestre.
 
 © Briell Quintana Hernández 2025
-
