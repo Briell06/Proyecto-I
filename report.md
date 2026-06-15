@@ -1,10 +1,20 @@
-# IMPORTANTE: Si quiere ver el proyecto sin tener que instalar dependencias y con datos de prueba para que no tenga que insertarlos manualmente, puede visitar la página online accediendo a [https://briell.pythonanywhere.com/](https://briell.pythonanywhere.com/), allí puede también editar, leer crear y borrar eventos y recursos para probar el sistema
+# IMPORTANTE: Si quiere ver el proyecto sin tener que instalar dependencias y con datos de prueba para que no tenga que insertarlos manualmente, puede visitar la página online accediendo a [https://briell.pythonanywhere.com/](https://briell.pythonanywhere.com/), allí puede también editar, leer crear y borrar eventos y recursos para probar el sistema, aunque tenga en cuenta que es un sistema de prueba y cualquier cambio que haga allí no afectará su instalación local, ya que son bases de datos completamente independientes, así que no se preocupe por romper nada, si quiere probar el sistema sin instalarlo, simplemente visite el enlace y disfrute de la experiencia
 
 # Sistema de Gestión de Aeropuerto
 
 Sistema Django para la coordinación de operaciones de vuelo, asignación de recursos y programación de personal.
 Implementa detección automática de conflictos, validación de restricciones operacionales y reglas de negocio
 aeroportuarias.
+
+## Introducción
+
+El transporte aéreo moderno exige una sincronización milimétrica de recursos logísticos, humanos y de infraestructura. La gestión de un aeropuerto implica coordinar variables dinámicas en tiempo real, donde un retraso en una pista o la asignación incorrecta de una puerta de embarque puede desencadenar un efecto dominó con pérdidas económicas millonarias y riesgos para la seguridad operacional.
+
+Este proyecto surge como respuesta a la necesidad de automatizar y optimizar la toma de decisiones en la programación de vuelos. El "Sistema de Gestión de Aeropuerto" ha sido desarrollado para actuar como un núcleo de validación inteligente, asegurando que cada operación cumpla estrictamente con las normativas internacionales, los tiempos de descanso y mantenimiento, y la compatibilidad física de los recursos disponibles.
+
+### Justificación de la Arquitectura
+
+La elección de un enfoque monolítico basado en Django se justifica por la alta cohesión de las reglas de negocio y la necesidad de transacciones atómicas. En un dominio donde la consistencia de los datos es crítica (por ejemplo, evitar que dos vuelos reserven la misma pista al mismo tiempo), el uso de un Object-Relational Mapper (ORM) robusto como el de Django garantiza el aislamiento de las transacciones y previene condiciones de carrera (_race conditions_). Además, el patrón Modelo-Vista-Plantilla (MVT) agiliza el acoplamiento de la interfaz de usuario con la lógica del backend, permitiendo una iteración rápida sin la sobrecarga arquitectónica de una API desacoplada en fases tempranas del desarrollo.
 
 ## Características
 
@@ -33,7 +43,7 @@ aeroportuarias.
 python main.py
 ```
 
-2. Una vez termine de instalar las dependencias y configurar la base de datos, acceder a [http://localhost:8000/](http://localhost:8000/)
+1. Una vez termine de instalar las dependencias y configurar la base de datos, acceder a [http://localhost:8000/](http://localhost:8000/)
 
 ## Instalación Manual
 
@@ -262,6 +272,18 @@ Las aeronaves requieren 24 horas entre vuelos para mantenimiento obligatorio.
 - Experiencia del personal: 0-50 años
 - Duración máxima de vuelo: 20 horas
 
+### Mecanismo de Validación en el Ciclo de Vida del Modelo
+
+Para garantizar que ninguna regla de negocio sea vulnerada (ya sea desde la interfaz web, la API o el panel de administración), las validaciones se centralizan en el método `clean()` del modelo `Flight`, interceptando los datos antes de su persistencia en la base de datos (`save()`).
+
+#### Implementación del Bloque Try-Except y Manejo de Excepciones
+
+El sistema utiliza la estructura de control `try-except` combinada con `ValidationError` de Django para capturar fallos lógicos de manera elegante. El flujo de validación sigue este orden estricto:
+
+- **Validación de Rangos Físicos**: Se comprueba que los atributos cuantitativos estén dentro de los límites operacionales (ej. longitud de pista $\ge 800$m y $\le 5000$m). Si falla, se levanta un error mapeado al campo específico.
+- **Cálculo de Copilotos**: Se evalúa la duración del vuelo ($V_{llegada} - V_{salida}$). Mediante una estructura condicional, se determina el número mínimo de copilotos requeridos. Si el conteo de la relación _Many-to-Many_ es inferior al requerido, se interrumpe el guardado.
+- **Control de Excepciones de Concurrencia**: Al interactuar con la base de datos para verificar exclusiones mutuas, cualquier anomalía en los tipos de datos o inconsistencia relacional es capturada por un bloque genérico `except Exception as e`, el cual registra el error en los logs del servidor y expone un mensaje amigable al usuario, evitando la caída del hilo de ejecución del servidor web (Error 500).
+
 ## Modelos principales
 
 - **Runway**: Pistas de aterrizaje/despegue
@@ -270,6 +292,15 @@ Las aeronaves requieren 24 horas entre vuelos para mantenimiento obligatorio.
 - **Personnel**: Pilotos y copilotos
 - **Flight**: Vuelos programados
 - **ResourceConstraint**: Restricciones de recursos (Correquisitos y Exclusión Mutua)
+
+### Diagrama de Relaciones y Estructura del ORM
+
+El corazón del sistema radica en su consistencia relacional. A continuación, se detalla cómo se estructuran y vinculan los modelos principales a través del ORM de Django:
+
+1. **Modelos Base independientes**: `Runway` (Pistas), `Gate` (Puertas), y `Aircraft` (Aeronaves) actúan como entidades maestras. Cada una almacena propiedades físicas cruciales para la validación (como la longitud de la pista o la capacidad de pasajeros de la aeronave).
+2. **Modelos de Personal (`Personnel`)**: Diseñado de manera flexible para categorizar el rol mediante opciones (_choices_), distinguiendo estrictamente entre pilotos y copilotos para satisfacer las restricciones de tripulación.
+3. **El Modelo Central (`Flight`)**: Es la entidad transaccional del sistema. Concentra relaciones de tipo Clave Foránea (`ForeignKey`) hacia `Runway`, `Gate`, `Aircraft` y el piloto principal, además de una relación de Muchos a Muchos (`ManyToManyField`) hacia `Personnel` para gestionar el equipo de copilotos.
+4. **Modelo de Restricciones (`ResourceConstraint`)**: Implementa un patrón de diseño meta-configurable. En lugar de codificar las reglas de exclusión en manualmente, este modelo almacena dinámicamente qué recurso (`GenericForeignKey` o IDs relacionados) activa una regla de co-requisito o exclusión mutua sobre otro.
 
 ## Endpoints
 
@@ -293,9 +324,7 @@ Archivo principal: `config/settings.py`
 
 ## Aprendizaje
 
-```text
 Lo que más aprendí al diseñar un sistema complejo con múltiples modelos relacionados, fue a aplicar principios de diseño de software y buenas prácticas de desarrollo. También mejoré mis habilidades en Django, ya que tenía experiencia previa con este framework y se me hizo bastante óptimo y familiar para desarrollar este proyecto, especialmente en la gestión de relaciones entre modelos (Lo que más me costó xdd) y el potencial que tienen las funciones para crear porciones de código reutilizables que te evitan repetición de código y bugs innecesarios, también lo útil que es el bloque try except a la hora te interceptar errores que pueden tumbar un programa y en lugar de eso gestionarlos y minimizarlos.
-```
 
 Proyecto desarrollado para la Universidad de la Habana en la carrera de Ciencias de la Computación, primer semestre.
 
